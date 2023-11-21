@@ -31,22 +31,18 @@ def extract_fbank_features(audio_file, n_mfcc=13):
     stft = librosa.stft(audio)
 
     # 计算梅尔滤波器组（Mel-filterbank）
-    mel_filters = librosa.filters.mel(sr, n_fft=2048, n_mfcc=n_mfcc)
+    mel_filters = librosa.filters.mel(sr=sr, n_fft=2048)
 
     # 应用梅尔滤波器组到STFT
-    mel_spectrogram = librosa.feature.melspectrogram(S=stft, sr=sr, n_fft=2048, n_mfcc=n_mfcc)
+    mel_spectrogram = librosa.feature.melspectrogram(S=stft, sr=sr)
 
     # 计算滤波器组能量谱（Filterbank energies）
-    fbank = librosa.feature.filterbank(mel_spectrogram, sr=sr, n_mfcc=n_mfcc)
+    # fbank = librosa.feature.filterbank(mel_spectrogram, sr=sr)
 
-    return fbank
-
-
+    return mel_spectrogram
 
 
 # 示例用法
 audio_file = './7061-6-0-0.wav'
-wav_plotter(audio_file, "test")
 fbank_features = extract_fbank_features(audio_file)
 print(fbank_features)
-
