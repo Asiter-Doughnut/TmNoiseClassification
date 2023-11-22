@@ -12,12 +12,22 @@ def wav_plotter(full_path, class_label):
     riff_fmt = wave_file.read(36)
     bit_depth_string = riff_fmt[-2:]
     bit_depth = struct.unpack("H", bit_depth_string)[0]
-    print('sampling rate: ', rate, 'Hz')  # 打印采样率，单位为赫兹（Hz）
-    print('bit depth: ', bit_depth)  # 打印位深度
-    print('number of channels: ', wav_sample.shape[1])  # 打印通道数
-    print('duration: ', wav_sample.shape[0] / rate, ' second')  # 打印持续时间，单位为秒（second）
-    print('number of samples: ', len(wav_sample))  # 打印样本数量
-    print('class: ', class_label)  # 打印类别标签
+    # 打印采样率，单位为赫兹（Hz）
+    print('sampling rate: ', rate, 'Hz')
+    # 打印位深度
+    print('bit depth: ', bit_depth)
+    # 打印通道数 和 持续时间，单位为秒（second）
+    if len(wav_sample.shape) > 1 and wav_sample.shape[1] > 1:
+        print('number of channels: ', wav_sample.shape[1])
+        print('duration: ', wav_sample.shape[0] / rate, ' second')
+    else:
+        print('number of channels: ', 1)
+        print('duration: ', wav_sample.shape[0] / rate, ' second')
+
+    # 打印样本数量
+    print('number of samples: ', len(wav_sample))
+    # 打印类别标签
+    print('class: ', class_label)
     plt.figure(figsize=(12, 4))
     plt.plot(wav_sample)
     plt.show()
@@ -36,6 +46,15 @@ def extract_fbank_features(audio_file, n_mfcc=13):
     # 应用梅尔滤波器组到STFT
     mel_spectrogram = librosa.feature.melspectrogram(S=stft, sr=sr)
 
+    fig, ax = plt.subplots()
+    S_dB = librosa.power_to_db(stft, ref=np.max)
+    img = librosa.display.specshow(S_dB, x_axis='time',
+                                   y_axis='mel', sr=sr,
+                                   fmax=8000, ax=ax)
+    fig.colorbar(img, ax=ax, format='%+2.0f dB')
+    ax.set(title='Mel-frequency spectrogram')
+    plt.show()
+
     # 计算滤波器组能量谱（Filterbank energies）
     # fbank = librosa.feature.filterbank(mel_spectrogram, sr=sr)
 
@@ -43,6 +62,14 @@ def extract_fbank_features(audio_file, n_mfcc=13):
 
 
 # 示例用法
-audio_file = './7061-6-0-0.wav'
+# audio_file = './7061-6-0-0.wav'
+audio_file = './data/UrbanSound8K/audio/fold3/12647-3-3-0.wav'
+# audio_file = './20231114153557.wav'
+wav_plotter(audio_file, "test")
 fbank_features = extract_fbank_features(audio_file)
+
 print(fbank_features)
+
+
+# pre-emphasis 预加重
+# frame blocking and windowing 分针和加窗
