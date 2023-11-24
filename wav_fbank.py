@@ -43,7 +43,7 @@ def extract_fbank_features(audio_file, n_mfcc=13):
     # 计算梅尔滤波器组（Mel-filterbank）
     mel_filters = librosa.filters.mel(sr=sr, n_fft=2048)
 
-    # 应用梅尔滤波器组到STFT
+    # 应用梅尔滤波器组到STFT Melspectrum 就是 Fbank
     mel_spectrogram = librosa.feature.melspectrogram(S=stft, sr=sr)
 
     fig, ax = plt.subplots()
@@ -73,3 +73,8 @@ print(fbank_features)
 
 # pre-emphasis 预加重
 # frame blocking and windowing 分针和加窗
+# 分帧的原因是因为 频率在一整个音频里面是变化的 所以我们假设在这小段时间内 频率不变 我们才去做这个傅里叶变化
+# Fourier-Transform and Power Spectrum 傅里叶变换和功率谱
+# Filter Banks 取得mel_spectrogram
+# Mel-frequency Cepstral Coefficients (MFCCs)
+# Mean Normalization
