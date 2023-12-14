@@ -26,7 +26,7 @@ class SEModule(nn.Module):
 
 
 class Bottle2neck(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size=1, dilation=None, scale=8):
+    def __init__(self, in_channels, out_channels, kernel_size=None, dilation=None, scale=8):
         super(Bottle2neck, self).__init__()
         width = int(math.floor(out_channels / scale))
         self.conv1 = nn.Conv1d(in_channels, width * scale, kernel_size=1)
@@ -40,19 +40,20 @@ class Bottle2neck(nn.Module):
             bns.append(nn.BatchNorm1d(width))
         self.convs = nn.ModuleList(convs)
         self.bns = nn.ModuleList(bns)
-        self.convs3 = nn.Conv1d(width * scale, out_channels, kernel_size=1)
+        self.conv3 = nn.Conv1d(width * scale, out_channels, kernel_size=1)
         self.bn3 = nn.BatchNorm1d(out_channels)
         self.relu = nn.ReLU()
         self.width = width
         self.se = SEModule(out_channels)
 
-    def forward(self, x, sp=None):
+    def forward(self, x):
         residual = x
         out = self.conv1(x)
         out = self.relu(out)
         out = self.bn1(out)
 
         spx = torch.split(out, self.width, 1)
+        global sp
         for i in range(self.nums):
             if i == 0:
                 sp = spx[i]
@@ -65,15 +66,14 @@ class Bottle2neck(nn.Module):
                 out = sp
             else:
                 out = torch.cat((out, sp), 1)
-            out = torch.cat((out, spx[self.nums]), 1)
+        out = torch.cat((out, spx[self.nums]), 1)
+        out = self.conv3(out)
+        out = self.relu(out)
+        out = self.bn3(out)
 
-            out = self.conv3(out)
-            out = self.relu(out)
-            out = self.bn3(out)
-
-            out = self.se(out)
-            out += residual
-            return out
+        out = self.se(out)
+        out += residual
+        return out
 
 
 class FbankAug(nn.Module):
@@ -128,8 +128,11 @@ class ECAPA_TDNN(nn.Module):
         self.relu = nn.ReLU()
         self.bn1 = nn.BatchNorm1d(C)
         self.layer1 = Bottle2neck(C, C, kernel_size=3, dilation=2, scale=8)
+
         self.layer2 = Bottle2neck(C, C, kernel_size=3, dilation=3, scale=8)
+
         self.layer3 = Bottle2neck(C, C, kernel_size=3, dilation=4, scale=8)
+
         self.layer4 = nn.Conv1d(3 * C, 1536, kernel_size=1)
         self.attention = nn.Sequential(
             nn.Conv1d(4608, 256, kernel_size=1),
@@ -150,12 +153,9 @@ class ECAPA_TDNN(nn.Module):
             x = x - torch.mean(x, dim=-1, keepdim=True)
             if aug == True:
                 x = self.specaug(x)
-
         x = self.conv1(x)
         x = self.relu(x)
-        print(x.shape)
         x = self.bn1(x)
-
         x1 = self.layer1(x)
         x2 = self.layer2(x + x1)
         x3 = self.layer3(x + x1 + x2)
