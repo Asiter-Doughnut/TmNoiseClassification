@@ -19,7 +19,7 @@ class EcapaModel(nn.Module):
         self.optim = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=2e-5)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, step_size=test_step, gamma=lr_decay)
         print(time.strftime("%m-%d %H:%M:%S") + " Model para number = %.2f" % (
-                    sum(param.numel() for param in self.sound_ecoder.parameters()) / 1024 / 1024))
+                sum(param.numel() for param in self.sound_ecoder.parameters()) / 1024 / 1024))
 
     def train_network(self, epoch, loader):
         self.train()
@@ -43,3 +43,20 @@ class EcapaModel(nn.Module):
             sys.stderr.flush()
         sys.stdout.write("\n")
         return loss / num, lr, top1 / index * len(labels)
+
+    def save_models(self):
+        '''
+        save the models in local
+        :return: null
+        '''
+        torch.save(self.state_dict(), './')
+
+    def load_models(self):
+        '''
+        load the models
+        :return:null
+        '''
+        self_state = self.state_dict()
+        loader_state = torch.load('./')
+        for name, param in loader_state.items():
+            self_state[name].copy_(param)
