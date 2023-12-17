@@ -24,9 +24,13 @@ s = EcapaModel(lr=0.001, lr_decay=0.97, C=512, m=0.2, s=30, n_class=10, test_ste
 #
 
 if __name__ == '__main__':
-    while (1):
-        ## Training for one epoch
-        loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
-        if epoch >= 80:
-            quit()
-        epoch += 1
+    s.load_models()
+    # s.save_models()
+    # loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
+
+    # while (1):
+    #     ## Training for one epoch
+    #     loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
+    #     if epoch >= 80:
+    #         quit()
+    #     epoch += 1

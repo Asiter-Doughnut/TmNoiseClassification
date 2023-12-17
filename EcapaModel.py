@@ -49,7 +49,7 @@ class EcapaModel(nn.Module):
         save the models in local
         :return: null
         '''
-        torch.save(self.state_dict(), './')
+        torch.save(self.state_dict(), './ecapa_tdnn/tensor.model')
 
     def load_models(self):
         '''
@@ -57,6 +57,13 @@ class EcapaModel(nn.Module):
         :return:null
         '''
         self_state = self.state_dict()
-        loader_state = torch.load('./')
+        loader_state = torch.load('./ecapa_tdnn/tensor.model')
         for name, param in loader_state.items():
+            if name not in self_state:
+                print("%s is not in the model." % name)
+                continue
+            if loader_state[name].size() != self_state[name].size():
+                print("Wrong parameter length:%s ,model:%s,loadedModel:%s" % (
+                    name, self_state[name].size(), loader_state[name].size()))
+                continue
             self_state[name].copy_(param)
