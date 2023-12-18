@@ -44,20 +44,20 @@ class EcapaModel(nn.Module):
         sys.stdout.write("\n")
         return loss / num, lr, top1 / index * len(labels)
 
-    def save_models(self):
+    def save_models(self, path):
         '''
         save the models in local
         :return: null
         '''
-        torch.save(self.state_dict(), './ecapa_tdnn/tensor.model')
+        torch.save(self.state_dict(), path)
 
-    def load_models(self):
+    def load_models(self, path):
         '''
         load the models
         :return:null
         '''
         self_state = self.state_dict()
-        loader_state = torch.load('./ecapa_tdnn/tensor.model')
+        loader_state = torch.load(path)
         for name, param in loader_state.items():
             if name not in self_state:
                 print("%s is not in the model." % name)

@@ -1,0 +1,41 @@
+# dataset
+dataset_conf:
+  # dataset path
+  path: './data'
+  # train path
+  train_list: 'train_list.txt'
+  # test path
+  test_list: 'test_list.txt'
+  # label path
+  label_list: 'label_list.txt'
+  # the wav sample_rate
+  sample_rate: 16000
+  # dataloader config
+  dataLoader:
+    # one epochs data size
+    batch_size: 64
+
+# model optimizer conf
+optimizer_conf:
+  #model learning rate
+  learning_rate: 0.001
+  #model learning rate decay
+  learning_rate_decay: 0.97
+
+
+model_conf:
+  # 分类的类别大小
+  num_class: 10
+  # encoder channel
+  channel: 512
+  # loss margin in AMM softmax
+  amm_m: 0.2
+  # loss scale in AMM softmax
+  amm_s: 30
+  # test and save ever [test_step] epochs
+  test_step: 1
+
+
+train_conf:
+  #max tran epoch
+  max_epoch: 60

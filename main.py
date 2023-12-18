@@ -9,6 +9,9 @@ import torch.nn as nn
 from dataLoader import train_loader
 
 from EcapaModel import EcapaModel
+import argparse
+
+from util import add_arguments
 
 # audio, sr = soundfile.read('20231114153557.wav')
 
@@ -23,8 +26,15 @@ epoch = 1
 s = EcapaModel(lr=0.001, lr_decay=0.97, C=512, m=0.2, s=30, n_class=10, test_step=1)
 #
 
+
+parser = argparse.ArgumentParser(description="ECAPA_trainer")
+parser.add_argument('--batch_size', type=int, default=400, help='Batch size')
+args = parser.parse_args()
+
 if __name__ == '__main__':
-    s.load_models()
+    add_arguments()
+    # s.load_models()
+    # print(args.batch_size)
     # s.save_models()
     # loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
 
