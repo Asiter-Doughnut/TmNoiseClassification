@@ -10,10 +10,15 @@ dataset_conf:
   label_list: 'label_list.txt'
   # the wav sample_rate
   sample_rate: 16000
-  # dataloader config
-  dataLoader:
-    # one epochs data size
-    batch_size: 64
+  # wav length num
+  num_frames: 300
+  # dataloader workers but in window must be 0
+  num_workers: 0
+
+# dataloader config
+dataLoader:
+  # one epochs data size
+  batch_size: 64
 
 # model optimizer conf
 optimizer_conf:
@@ -39,3 +44,6 @@ model_conf:
 train_conf:
   #max tran epoch
   max_epoch: 60
+
+save_conf:
+  save_path: './'

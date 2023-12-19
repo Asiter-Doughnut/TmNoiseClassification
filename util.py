@@ -1,3 +1,5 @@
+import os.path
+
 import yaml
 
 
@@ -21,15 +23,29 @@ def accuracy(output, target, turek=(1,)):
     return res
 
 
-def add_arguments():
-    with open('./config/ecapaModel.yml', encoding='utf-8') as file:
-        content = file.read()
-        print(content)
-        print(type(content))
+def init_dir(args):
+    '''
+    initialize a folder to dir
+    '''
+    args.model_save_path = os.path.join(args.save_path, 'model')
+    os.makedirs(args.model_save_path, exist_ok=True)
+    return args
 
-        print("\n*****转换yaml数据为字典或列表*****")
-        # 设置Loader=yaml.FullLoader忽略YAMLLoadWarning警告
-        data = yaml.load(content, Loader=yaml.FullLoader)
-        print(data)
-        print(type(data))
-        print(data.get('my'))  # 类型为字典 <class 'dict'>
+
+def add_arguments(parser):
+    with open('./config/ecapaModel.yml', 'r', encoding='utf-8') as file:
+        config = yaml.safe_load(file)
+        for key, value in config.items():
+            if isinstance(value, dict):
+                add_dist_arguments(parser, value)
+            else:
+                parser.add_argument(f'--{key}', type=type(value), default=value)
+    return parser
+
+
+def add_dist_arguments(parser, dist_list):
+    for key, value in dist_list.items():
+        if isinstance(value, dict):
+            add_dist_arguments(parser, value)
+        else:
+            parser.add_argument(f'--{key}', type=type(value), default=value)

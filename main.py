@@ -5,35 +5,27 @@ import torch
 import torchaudio
 
 import torch.nn as nn
-
-from dataLoader import train_loader
-
-from EcapaModel import EcapaModel
 import argparse
-
-from util import add_arguments
-
-# audio, sr = soundfile.read('20231114153557.wav')
-
-
-# test_list
-train_Loader = train_loader('test_list.txt', './data', 300)
-trainLoader = torch.utils.data.DataLoader(train_Loader, batch_size=64, shuffle=True, num_workers=0,
-                                          drop_last=True)
-
-epoch = 1
-# lr, lr_decay, C, n_class, m, s, test_step
-s = EcapaModel(lr=0.001, lr_decay=0.97, C=512, m=0.2, s=30, n_class=10, test_step=1)
-#
-
+from dataLoader import train_loader
+from EcapaModel import EcapaModel
+from util import add_arguments, init_dir
 
 parser = argparse.ArgumentParser(description="ECAPA_trainer")
-parser.add_argument('--batch_size', type=int, default=400, help='Batch size')
+parser = add_arguments(parser)
 args = parser.parse_args()
+args = init_dir(args)
+
+# test_list
+train_Loader = train_loader(args.test_list, args.path, args.num_frames)
+trainLoader = torch.utils.data.DataLoader(train_Loader, batch_size=args.batch_size, shuffle=True,
+                                          num_workers=args.num_workers,
+                                          drop_last=True)
+
+s = EcapaModel(lr=args.learning_rate, lr_decay=args.learning_rate_decay, C=args.channel, m=args.amm_m, s=args.amm_s,
+               n_class=args.num_class, test_step=args.test_step)
 
 if __name__ == '__main__':
-    add_arguments()
-    # s.load_models()
+    s.save_models(args.model_save_path + "/model_1.model")
     # print(args.batch_size)
     # s.save_models()
     # loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
