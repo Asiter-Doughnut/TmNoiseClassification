@@ -1,8 +1,11 @@
 import sys
 import time
 
+import numpy
 import numpy as np
+import soundfile
 import torch.optim
+import tqdm
 from torch import nn
 
 from loss import AAMsoftmax
@@ -49,6 +52,24 @@ class EcapaModel(nn.Module):
             sys.stderr.flush()
         sys.stdout.write("\n")
         return loss / num, lr, top1 / index * len(labels)
+
+    def eval_network(self, test_list, test_path):
+        self.eval()
+        files = []
+        # load the test file
+        with open(test_path + '/' + test_list, 'r', encoding='utf-8') as file:
+            for line in file:
+                fileName = line.strip().split('\t')[0]
+                files.append(fileName)
+        for _, file in enumerate(files):
+            audio, _ = soundfile.read(file)
+            # Full sound
+            data_1 = torch.FloatTensor(numpy.stack([audio], axis=0)).cuda()
+            # Splinted sound
+            length = 300 * 160 + 240
+            if audio.shape[0] <= length:
+                shortage = length - audio.shape[0]
+                audio = numpy.pad(audio, (0, shortage), 'wrap')
 
     def save_models(self, path):
         '''

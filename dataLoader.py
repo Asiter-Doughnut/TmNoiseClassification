@@ -26,7 +26,7 @@ class train_loader(object):
         # audio, sr = soundfile.read("20231114153557.wav")
         # compute the wav length
         # + 240
-        length = self.num_frames * 160
+        length = self.num_frames * 160 + 240
         # If the audio length is shorter than the required wav length, we just need to join the wav.
         if audio.shape[0] <= length:
             shortage = length - audio.shape[0]
