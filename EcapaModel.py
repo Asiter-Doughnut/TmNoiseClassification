@@ -18,10 +18,16 @@ class EcapaModel(nn.Module):
         self.sound_loss = AAMsoftmax(n_class=n_class, m=m, s=s).cuda()
         self.optim = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=2e-5)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, step_size=test_step, gamma=lr_decay)
-        print(time.strftime("%m-%d %H:%M:%S") + " Model para number = %.2f" % (
-                sum(param.numel() for param in self.sound_ecoder.parameters()) / 1024 / 1024))
+        # print(time.strftime("%m-%d %H:%M:%S") + " Model para number = %.2f" % (
+        #         sum(param.numel() for param in self.sound_ecoder.parameters()) / 1024 / 1024))
 
     def train_network(self, epoch, loader):
+        '''
+        train one epoch and return info
+        :param epoch: epoch num
+        :param loader: dataLoader
+        :return: train loss,learn_rate,accuracy
+        '''
         self.train()
         self.scheduler.step(epoch - 1)
         index, top1, loss = 0, 0, 0
