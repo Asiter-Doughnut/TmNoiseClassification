@@ -43,7 +43,7 @@ model_conf:
 
 train_conf:
   #max tran epoch
-  max_epoch: 60
+  max_epoch: 80
 
 save_conf:
   save_path: './'

@@ -49,3 +49,7 @@ def add_dist_arguments(parser, dist_list):
             add_dist_arguments(parser, value)
         else:
             parser.add_argument(f'--{key}', type=type(value), default=value)
+
+
+def extract_number(fileName,save_path):
+    return int(fileName.replace(".model", '')[len(save_path) + 12:])

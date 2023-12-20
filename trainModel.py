@@ -7,7 +7,7 @@ import torch
 import argparse
 from dataLoader import train_loader
 from EcapaModel import EcapaModel
-from util import add_arguments, init_dir
+from util import add_arguments, init_dir, extract_number
 
 parser = argparse.ArgumentParser(description="ECAPA_trainer")
 parser = add_arguments(parser)
@@ -22,15 +22,20 @@ trainLoader = torch.utils.data.DataLoader(train_Loader, batch_size=args.batch_si
 
 # find the model in the directory
 modelfiles = glob.glob('%s/ecapa_tdnn_*.model' % args.model_save_path)
-modelfiles.sort()
+modelfiles = sorted(modelfiles, key=lambda x: int(extract_number(x, save_path=args.model_save_path)))
 
 # get record file and add record
 record_file = open(args.record_save_path, "a+")
 
+# # assessment criteria
+# EERs = []
+
 # if model is exit,continue train the previous model
 if len(modelfiles) >= 1:
+    print(modelfiles)
     print("model %s have trained record" % modelfiles[-1])
     filename, _ = os.path.splitext(os.path.basename(modelfiles[-1]))
+    print(filename[11:])
     epoch = int(filename[11:]) + 1
     s = EcapaModel(lr=args.learning_rate, lr_decay=args.learning_rate_decay, C=args.channel, m=args.amm_m, s=args.amm_s,
                    n_class=args.num_class, test_step=args.test_step)
@@ -43,7 +48,7 @@ else:
 
 while 1:
     # trian one epoch
-    loss, lr, acc = s.train_network(epoch=epoch, loader=train_loader)
+    loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
 
     # record the epoch step train
     if epoch % args.test_step == 0:
@@ -56,4 +61,4 @@ while 1:
     if epoch >= args.max_epoch:
         quit()
 
-    epoch *= 1
+    epoch += 1
