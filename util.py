@@ -1,5 +1,4 @@
 import os.path
-
 import yaml
 
 
@@ -28,6 +27,7 @@ def init_dir(args):
     initialize a folder to dir
     '''
     args.model_save_path = os.path.join(args.save_path, 'model')
+    args.record_save_path = os.path.join(args.save_path, 'model_record.txt')
     os.makedirs(args.model_save_path, exist_ok=True)
     return args
 

@@ -1,5 +1,6 @@
 import glob
 import os
+import time
 
 import torch
 
@@ -23,6 +24,9 @@ trainLoader = torch.utils.data.DataLoader(train_Loader, batch_size=args.batch_si
 modelfiles = glob.glob('%s/ecapa_tdnn_*.model' % args.model_save_path)
 modelfiles.sort()
 
+# get record file and add record
+record_file = open(args.record_save_path, "a+")
+
 # if model is exit,continue train the previous model
 if len(modelfiles) >= 1:
     print("model %s have trained record" % modelfiles[-1])
@@ -43,7 +47,10 @@ while 1:
 
     # record the epoch step train
     if epoch % args.test_step == 0:
-        s.save_models(args.model_save_path + 'ecapa_tdnn_%s.model' % epoch)
+        s.save_models(args.model_save_path + '/ecapa_tdnn_%s.model' % epoch)
+        record_file.write(
+            "%d epoch, LR %f, LOSS %f, ACC %2.2f%%\n" % (epoch, lr, loss, acc))
+        record_file.flush()
 
     # epoch more than quit train
     if epoch >= args.max_epoch:
