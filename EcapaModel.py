@@ -5,11 +5,13 @@ import numpy
 import numpy as np
 import soundfile
 import torch.optim
-import tqdm
+
 from torch import nn
+import torch.nn.functional as F
 
 from loss import AAMsoftmax
 from model import ECAPA_TDNN
+from util import calculate_eer
 
 
 class EcapaModel(nn.Module):
@@ -56,20 +58,32 @@ class EcapaModel(nn.Module):
     def eval_network(self, test_list, test_path):
         self.eval()
         files = []
+        labels = []
+        scores, prlabels = [], []
         # load the test file
         with open(test_path + '/' + test_list, 'r', encoding='utf-8') as file:
             for line in file:
                 fileName = line.strip().split('\t')[0]
+                label = line.strip().split('\t')[1]
                 files.append(fileName)
-        for _, file in enumerate(files):
+                labels.append(label)
+        for _, (file, label) in enumerate(zip(files, labels)):
             audio, _ = soundfile.read(file)
             # Full sound
-            data_1 = torch.FloatTensor(numpy.stack([audio], axis=0)).cuda()
-            # Splinted sound
-            length = 300 * 160 + 240
-            if audio.shape[0] <= length:
-                shortage = length - audio.shape[0]
-                audio = numpy.pad(audio, (0, shortage), 'wrap')
+            audio = torch.FloatTensor(numpy.stack([audio], axis=0))
+            # Process dual-channel audio into single-channel audio.
+            if len(audio.shape) >= 3:
+                audio = audio[:, :, 0]
+            with torch.no_grad():
+                embedding = self.sound_ecoder.forward(audio.cuda(), aug=False)
+                embedding = F.normalize(embedding, p=2.0, dim=1)
+                score, pre_index, = self.predict(embedding)
+                print("预测值为%d,得分为%.3f,真实值为%s" % (pre_index, score, label))
+                # print(torch.nn.functional.softmax(embedding, dim=-1))
+            scores.append(score)
+            prlabels.append(0 if label == pre_index else 1)
+        EER = calculate_eer(prlabels, scores)
+        return EER
 
     def save_models(self, path):
         '''
@@ -94,3 +108,9 @@ class EcapaModel(nn.Module):
                     name, self_state[name].size(), loader_state[name].size()))
                 continue
             self_state[name].copy_(param)
+
+    def predict(self, x):
+        weighted_sum = torch.matmul(x, self.sound_loss.weight.T)
+        label = torch.nn.functional.softmax(weighted_sum, dim=1)
+        score, pared = label.topk(1)
+        return score, pared

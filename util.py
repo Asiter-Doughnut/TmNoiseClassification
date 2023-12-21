@@ -1,5 +1,7 @@
 import os.path
 import yaml
+from sklearn.metrics import roc_curve
+import numpy as np
 
 
 def accuracy(output, target, turek=(1,)):
@@ -51,5 +53,18 @@ def add_dist_arguments(parser, dist_list):
             parser.add_argument(f'--{key}', type=type(value), default=value)
 
 
-def extract_number(fileName,save_path):
+def extract_number(fileName, save_path):
     return int(fileName.replace(".model", '')[len(save_path) + 12:])
+
+
+def calculate_eer(y_true, y_score):
+    """
+       计算EER
+       :param y_true: 真实标签，0或1
+       :param y_score: 预测得分，范围为[0, 1]
+       :return: EER
+    """
+    fpr, tpr, thresholds = roc_curve(y_true, y_score)
+    fnr = 1 - tpr
+    eer = fpr[np.nanargmin(np.absolute((fnr.cpu() - fpr.cpu())))]
+    return eer

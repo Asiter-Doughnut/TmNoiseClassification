@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -43,5 +44,5 @@ class AAMsoftmax(nn.Module):
         # Cross entropy is used to calculate the loss
         loss = self.ce(output, label)
         prec1 = accuracy(output.detach(), label.detach(), turek=(1,))[0]
-
         return loss, prec1
+
