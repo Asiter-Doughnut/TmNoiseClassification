@@ -27,8 +27,9 @@ modelfiles = sorted(modelfiles, key=lambda x: int(extract_number(x, save_path=ar
 # get record file and add record
 record_file = open(args.record_save_path, "a+")
 
-# # assessment criteria
-# EERs = []
+# assessment criteria
+EERs = []
+MinDCFs = []
 
 # if model is exit,continue train the previous model
 if len(modelfiles) >= 1:
@@ -53,8 +54,16 @@ while 1:
     # record the epoch step train
     if epoch % args.test_step == 0:
         s.save_models(args.model_save_path + '/ecapa_tdnn_%s.model' % epoch)
+        score = s.eval_network(test_list=args.test_list, test_path=args.path)
+        EERs.append(score[0])
+        MinDCFs.append(score[1])
         record_file.write(
-            "%d epoch, LR %f, LOSS %f, ACC %2.2f%%\n" % (epoch, lr, loss, acc))
+            "%d epoch, LR %f, LOSS %f, ACC %2.2f%%,EER %2.2f%%, bestEER %2.2f%%,MinDFC %2.2f%%, bestMinDFC %2.2f%%\n"
+            % (epoch, lr, loss, acc, EERs[-1], min(EERs), MinDCFs[-1], min(MinDCFs)))
+        print(time.strftime("%Y-%m-%d %H:%M:%S"),
+              "%d epoch, ACC %2.2f%%, EER %2.2f%%, bestEER %2.2f%%,MinDFC %2.2f%%, bestMinDFC %2.2f%%" % (
+                  epoch, acc, EERs[-1], min(EERs), MinDCFs[-1], min(MinDCFs)))
+
         record_file.flush()
 
     # epoch more than quit train

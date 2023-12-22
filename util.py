@@ -58,13 +58,22 @@ def extract_number(fileName, save_path):
 
 
 def calculate_eer(y_true, y_score):
-    """
-       计算EER
-       :param y_true: 真实标签，0或1
-       :param y_score: 预测得分，范围为[0, 1]
-       :return: EER
-    """
     fpr, tpr, thresholds = roc_curve(y_true, y_score)
     fnr = 1 - tpr
-    eer = fpr[np.nanargmin(np.absolute((fnr.cpu() - fpr.cpu())))]
-    return eer
+    eer = fpr[np.nanargmin(np.absolute((fnr - fpr)))]
+    return eer, fpr, tpr
+
+
+def calculate_min_dcf(fpr, tpr, p_target=0.05, c_fr=1, c_fa=1, **args):
+    min_det = float("inf")
+    # minDcf minDCF = C_fa * FAR * (1 - P_target) + C_fr * FRR *  P_target
+    for i in range(0, len(fpr)):
+        if i == 0:
+            continue
+        c_det = c_fa * tpr[i] * (1 - p_target) + c_fr * fpr[i] * p_target
+        if c_det < min_det:
+            min_det = c_det
+
+    c_def = min(c_fr * p_target, c_fa * (1 - p_target))
+    min_dcf = min_det / c_def
+    return min_dcf
