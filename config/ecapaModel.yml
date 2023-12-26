@@ -1,7 +1,7 @@
 # dataset
 dataset_conf:
   # dataset path
-  path: './data'
+  path: './data/ESC50'
   # train path
   train_list: 'train_list.txt'
   # test path
@@ -30,7 +30,7 @@ optimizer_conf:
 
 model_conf:
   # 分类的类别大小
-  num_class: 10
+  num_class: 50
   # encoder channel
   channel: 512
   # loss margin in AMM softmax
@@ -43,7 +43,7 @@ model_conf:
 
 train_conf:
   #max tran epoch
-  max_epoch: 80
+  max_epoch: 160
 
 save_conf:
   save_path: './'

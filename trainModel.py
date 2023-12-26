@@ -15,7 +15,7 @@ args = parser.parse_args()
 args = init_dir(args)
 
 #  Define the data loader
-train_Loader = train_loader(args.test_list, args.path, args.num_frames)
+train_Loader = train_loader(args.train_list, args.path, args.num_frames)
 trainLoader = torch.utils.data.DataLoader(train_Loader, batch_size=args.batch_size, shuffle=True,
                                           num_workers=args.num_workers,
                                           drop_last=True)
