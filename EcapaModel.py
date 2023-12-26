@@ -77,7 +77,7 @@ class EcapaModel(nn.Module):
             with torch.no_grad():
                 embedding = self.sound_ecoder.forward(audio.cuda(), aug=False)
                 embedding = F.normalize(embedding, p=2.0, dim=1)
-                score, pre_index, = self.predict(embedding)
+                score, pre_index, = self.predict(embedding, 1)
             scores.append(score[0].cpu().numpy())
             predict_labels.append(1 if int(label) == pre_index else 0)
         EER, fpr, tpr = calculate_eer(predict_labels, scores)
@@ -108,8 +108,8 @@ class EcapaModel(nn.Module):
                 continue
             self_state[name].copy_(param)
 
-    def predict(self, x):
+    def predict(self, x, show_num):
         weighted_sum = torch.matmul(x, self.sound_loss.weight.T)
         label = torch.nn.functional.softmax(weighted_sum, dim=1)[0]
-        score, pared = label.topk(1)
+        score, pared = label.topk(show_num)
         return score, pared
