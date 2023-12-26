@@ -21,7 +21,7 @@ trainLoader = torch.utils.data.DataLoader(train_Loader, batch_size=args.batch_si
                                           drop_last=True)
 
 # find the model in the directory
-modelfiles = glob.glob('%s/ecapa_tdnn_*.model' % args.model_save_path)
+modelfiles = glob.glob('%s/ecapa_tdnn_*.pt' % args.model_save_path)
 modelfiles = sorted(modelfiles, key=lambda x: int(extract_number(x, save_path=args.model_save_path)))
 
 # get record file and add record
@@ -53,7 +53,7 @@ while 1:
 
     # record the epoch step train
     if epoch % args.test_step == 0:
-        s.save_models(args.model_save_path + '/ecapa_tdnn_%s.model' % epoch)
+        s.save_models(args.model_save_path + '/ecapa_tdnn_%s.pt' % epoch)
         score = s.eval_network(test_list=args.test_list, test_path=args.path)
         EERs.append(score[0])
         MinDCFs.append(score[1])
