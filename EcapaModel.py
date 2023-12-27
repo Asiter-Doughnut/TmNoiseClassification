@@ -18,9 +18,9 @@ from util import calculate_eer, calculate_min_dcf
 class EcapaModel(nn.Module):
     def __init__(self, lr, lr_decay, C, n_class, m, s, test_step):
         super(EcapaModel, self).__init__()
-        ## ECAPA-TDNN
+        ## ECAPA-TDNN .cuda()
         self.sound_ecoder = ECAPA_TDNN(C=C).cuda()
-        ## Classifier
+        ## Classifier .cuda()
         self.sound_loss = AAMsoftmax(n_class=n_class, m=m, s=s).cuda()
         self.optim = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=2e-5)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, step_size=test_step, gamma=lr_decay)
@@ -90,6 +90,20 @@ class EcapaModel(nn.Module):
         :return: null
         '''
         torch.save(self.state_dict(), path)
+
+    def save_lossWeight_models(self, path):
+        tensor = self.sound_loss.weight.T
+        numpy_array = tensor.detach().numpy()
+        np.savetxt(path, numpy_array)
+        # input_shape = self.sound_ecoder.torchfbank[0].n_fft
+        # example_inputs = torch.ones(input_shape, dtype=None)
+        #
+        # audio = torch.FloatTensor(numpy.stack([example_inputs], axis=0))
+        # if len(audio.shape) >= 3:
+        #     audio = audio[:, :, 0]
+        # print(audio.shape)
+        # traced_model = torch.jit.trace(self.sound_ecoder, audio)
+        # torch.jit.save(traced_model, "classification.pt")
 
     def load_models(self, path):
         '''

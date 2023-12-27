@@ -27,19 +27,5 @@ s = EcapaModel(lr=args.learning_rate, lr_decay=args.learning_rate_decay, C=args.
 epoch = 1
 
 if __name__ == '__main__':
-    s.load_models("./model/ecapa_tdnn_1.model")
-    # s.eval_network(test_list=args.train_list, test_path=args.path)
-    print(s.eval_network(test_list=args.test_list, test_path=args.path))
-    s.load_models("./model/ecapa_tdnn_80.model")
-    # s.eval_network(test_list=args.train_list, test_path=args.path)
-    print(s.eval_network(test_list=args.test_list, test_path=args.path))
-# print(args.batch_size)
-# s.save_models()
-# loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
-
-# while (1):
-#     ## Training for one epoch
-#     loss, lr, acc = s.train_network(epoch=epoch, loader=trainLoader)
-#     if epoch >= 80:
-#         quit()
-#     epoch += 1
+    s.load_models("./model/ecapa_tdnn_80.pt")
+    s.save_lossWeight_models("rknn.text")
