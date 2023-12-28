@@ -54,7 +54,7 @@ def add_dist_arguments(parser, dist_list):
 
 
 def extract_number(fileName, save_path):
-    return int(fileName.replace(".model", '')[len(save_path) + 12:])
+    return int(fileName.replace(".pt", '')[len(save_path) + 12:])
 
 
 def calculate_eer(y_true, y_score):
