@@ -117,11 +117,10 @@ class ECAPA_TDNN(nn.Module):
     def __init__(self, C):
         super(ECAPA_TDNN, self).__init__()
 
-        self.torchfbank = torch.nn.Sequential(
-            torchaudio.transforms.MelSpectrogram(sample_rate=16000, n_fft=512, win_length=400, hop_length=160,
-                                                 f_min=20, f_max=7600, window_fn=torch.hamming_window, n_mels=80),
-        )
-
+        # self.torchfbank = torch.nn.Sequential(
+        #     torchaudio.transforms.MelSpectrogram(sample_rate=16000, n_fft=512, win_length=400, hop_length=160,
+        #                                          f_min=20, f_max=7600, window_fn=torch.hamming_window, n_mels=80),
+        # )
         self.specaug = FbankAug()  # Spec augmentation
 
         self.conv1 = nn.Conv1d(80, C, kernel_size=5, stride=1, padding=2)
@@ -148,7 +147,8 @@ class ECAPA_TDNN(nn.Module):
 
     def forward(self, x, aug=False):
         with torch.no_grad():
-            x = self.torchfbank(x) + 1e-6
+            # x = self.torchfbank(x) + 1e-6
+            x = x + 1e-6
             x = x.log()
             x = x - torch.mean(x, dim=-1, keepdim=True)
             if aug == True:

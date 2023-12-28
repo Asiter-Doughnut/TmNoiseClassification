@@ -1,10 +1,13 @@
 import sys
 import time
 
+import librosa
 import numpy
 import numpy as np
+import scipy
 import soundfile
 import torch.optim
+import torchaudio
 import tqdm
 
 from torch import nn
@@ -71,19 +74,37 @@ class EcapaModel(nn.Module):
                 labels.append(label)
         for _, (file, label) in tqdm.tqdm(enumerate(zip(files, labels)), total=len(files)):
             audio, _ = soundfile.read(file)
-            audio = torch.FloatTensor(numpy.stack([audio], axis=0))
-            if len(audio.shape) >= 3:
-                audio = audio[:, :, 0]
+            if len(audio.shape) >= 2:
+                audio = audio[:, 0]
+            print(self.fbank2(audio))
+            audio2 = torch.FloatTensor(numpy.stack([self.fbank2(audio)], axis=0))
+            audio = numpy.stack([audio], axis=0)
+            audio = torch.FloatTensor(audio)
+            audio = self.fbank(audio)
+            print(audio[0])
             with torch.no_grad():
-                print(audio.shape)
-                embedding = self.sound_ecoder.forward(audio.cuda(), aug=False)
+                embedding = self.sound_ecoder.forward(audio, aug=False)
                 embedding = F.normalize(embedding, p=2.0, dim=1)
                 score, pre_index, = self.predict(embedding, 1)
+            print(score)
             scores.append(score[0].cpu().numpy())
             predict_labels.append(1 if int(label) == pre_index else 0)
         EER, fpr, tpr = calculate_eer(predict_labels, scores)
         min_DCF = calculate_min_dcf(fpr, tpr)
         return EER, min_DCF
+
+    def fbank(self, x):
+        torchfbank = torchaudio.transforms.MelSpectrogram(sample_rate=16000, n_fft=512, win_length=400, hop_length=160,
+                                                          f_min=20, f_max=7600, window_fn=torch.hamming_window,
+                                                          n_mels=80)
+        x = torchfbank(x)
+        return x
+
+    def fbank2(self, x):
+        stft = librosa.stft(x, n_fft=512, hop_length=160, win_length=400, window=scipy.signal.windows.hamming)
+        stft_normalized = librosa.util.normalize(np.abs(stft))
+        mfcc = librosa.feature.mfcc(S=stft_normalized, n_mfcc=80)
+        return mfcc
 
     def save_models(self, path):
         '''
