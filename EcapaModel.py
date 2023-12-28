@@ -16,12 +16,13 @@ from util import calculate_eer, calculate_min_dcf
 
 
 class EcapaModel(nn.Module):
-    def __init__(self, lr, lr_decay, C, n_class, m, s, test_step):
+    def __init__(self, lr, lr_decay, C, n_class, m, s, test_step, useGPU=True):
         super(EcapaModel, self).__init__()
-        ## ECAPA-TDNN .cuda()
-        self.sound_ecoder = ECAPA_TDNN(C=C).cuda()
-        ## Classifier .cuda()
-        self.sound_loss = AAMsoftmax(n_class=n_class, m=m, s=s).cuda()
+        self.sound_ecoder = ECAPA_TDNN(C=C)
+        self.sound_loss = AAMsoftmax(n_class=n_class, m=m, s=s)
+        if useGPU:
+            self.sound_ecoder = self.sound_ecoder.cuda()
+            self.sound_loss = self.sound_loss.cuda()
         self.optim = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=2e-5)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optim, step_size=test_step, gamma=lr_decay)
         print(time.strftime("%m-%d %H:%M:%S") + " Model para number = %.2f" % (
@@ -35,7 +36,6 @@ class EcapaModel(nn.Module):
         :return: train loss,learn_rate,accuracy
         '''
         self.train()
-
         index, top1, loss = 0, 0, 0
         lr = self.optim.param_groups[0]['lr']
         for num, (data, labels) in enumerate(loader, start=1):
@@ -75,6 +75,7 @@ class EcapaModel(nn.Module):
             if len(audio.shape) >= 3:
                 audio = audio[:, :, 0]
             with torch.no_grad():
+                print(audio.shape)
                 embedding = self.sound_ecoder.forward(audio.cuda(), aug=False)
                 embedding = F.normalize(embedding, p=2.0, dim=1)
                 score, pre_index, = self.predict(embedding, 1)
@@ -91,19 +92,18 @@ class EcapaModel(nn.Module):
         '''
         torch.save(self.state_dict(), path)
 
-    def save_lossWeight_models(self, path):
+    def save_jit_trace_models(self):
+        # modelInput soundLength*160
+        example_forward_input = torch.rand([1, 3000 * 160])
+        # set model be eval patten
+        self.sound_ecoder.eval()
+        traced_model = torch.jit.trace(self.sound_ecoder.forward, example_forward_input)
+        # save model
+        torch.jit.save(traced_model, "Class_ptModel.pt")
         tensor = self.sound_loss.weight.T
-        numpy_array = tensor.detach().numpy()
-        np.savetxt(path, numpy_array)
-        # input_shape = self.sound_ecoder.torchfbank[0].n_fft
-        # example_inputs = torch.ones(input_shape, dtype=None)
-        #
-        # audio = torch.FloatTensor(numpy.stack([example_inputs], axis=0))
-        # if len(audio.shape) >= 3:
-        #     audio = audio[:, :, 0]
-        # print(audio.shape)
-        # traced_model = torch.jit.trace(self.sound_ecoder, audio)
-        # torch.jit.save(traced_model, "classification.pt")
+        numpy_array = tensor.cpu().detach().numpy()
+        # save loss weight
+        np.savetxt('Class_ptModel_loss.txt', numpy_array)
 
     def load_models(self, path):
         '''
