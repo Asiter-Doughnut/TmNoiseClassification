@@ -51,3 +51,12 @@ loosely arranged into 5 major categories:
 | <sub>Insects (flying)</sub> | <sub>Pouring water</sub>                       | <sub>Brushing teeth</sub>           | <sub>Clock alarm</sub>              | <sub>Airplane</sub>              |
 | <sub>Sheep</sub>            | <sub>Toilet flush</sub>                        | <sub>Snoring</sub>                  | <sub>Clock tick</sub>               | <sub>Fireworks</sub>             |
 | <sub>Crow</sub>             | <sub>Thunderstorm</sub>                        | <sub>Drinking, sipping</sub>        | <sub>Glass breaking</sub>           | <sub>Hand saw</sub>              |
+
+### The torch model transformation
+
+The rknnToolkit needs to run on Ubuntu 20.4, and is currently built using py311 + 1.6.0 to successfully convert the
+model. The Oracle VM VirtualBox found so far is when a virtual machine is used. There will be strange problems with
+model conversion, and illegal instructions will suddenly occur when the weight layer is too sparse. At present, there is
+no problem with the replacement of the VMware Workstation Pro. The input tensor is initially [1,80,3000 * 160]. Model
+conversion failed. Conversion errors may occur because the data is too large. Now it becomes 500 \ * 160. It is the
+audio of 5S. At present, we are waiting for the deployment of connecting boards.
