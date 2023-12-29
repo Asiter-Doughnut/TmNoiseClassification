@@ -15,15 +15,16 @@ import torch.nn.functional as F
 
 from loss import AAMsoftmax
 from model import ECAPA_TDNN
-from util import calculate_eer, calculate_min_dcf
+from util import calculate_eer, calculate_min_dcf, librosa_mel
 
 
 class EcapaModel(nn.Module):
-    def __init__(self, lr, lr_decay, C, n_class, m, s, test_step, useGPU=True):
+    def __init__(self, lr, lr_decay, C, n_class, m, s, test_step, use_gpu):
         super(EcapaModel, self).__init__()
         self.sound_ecoder = ECAPA_TDNN(C=C)
         self.sound_loss = AAMsoftmax(n_class=n_class, m=m, s=s)
-        if useGPU:
+        self.use_gpu = use_gpu
+        if use_gpu:
             self.sound_ecoder = self.sound_ecoder.cuda()
             self.sound_loss = self.sound_loss.cuda()
         self.optim = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=2e-5)
@@ -43,9 +44,11 @@ class EcapaModel(nn.Module):
         lr = self.optim.param_groups[0]['lr']
         for num, (data, labels) in enumerate(loader, start=1):
             self.zero_grad()
-            labels = torch.LongTensor(np.array(labels)).cuda()
-            sound_embedding = self.sound_ecoder.forward(data.cuda(), aug=True)
-
+            labels = torch.LongTensor(np.array(labels))
+            if self.use_gpu:
+                data = data.cuda()
+                labels = labels.cuda()
+            sound_embedding = self.sound_ecoder.forward(data, aug=True)
             nloss, prec = self.sound_loss.forward(sound_embedding, labels)
             nloss.backward()
             self.optim.step()
@@ -66,27 +69,35 @@ class EcapaModel(nn.Module):
         files = []
         labels = []
         scores, predict_labels = [], []
+
         with open(test_path + '/' + test_list, 'r', encoding='utf-8') as file:
             for line in file:
                 fileName = line.strip().split('\t')[0]
                 label = line.strip().split('\t')[1]
                 files.append(fileName)
                 labels.append(label)
+
         for _, (file, label) in tqdm.tqdm(enumerate(zip(files, labels)), total=len(files)):
             audio, _ = soundfile.read(file)
+
             if len(audio.shape) >= 2:
                 audio = audio[:, 0]
-            print(self.fbank2(audio))
-            audio2 = torch.FloatTensor(numpy.stack([self.fbank2(audio)], axis=0))
-            audio = numpy.stack([audio], axis=0)
-            audio = torch.FloatTensor(audio)
-            audio = self.fbank(audio)
-            print(audio[0])
+
+            # torch mel
+            # audio = numpy.stack([audio], axis=0)
+            # audio = torch.FloatTensor(audio)
+            # audio = self.fbank(audio)
+
+            # librosa mel
+            audio = torch.FloatTensor(numpy.stack([librosa_mel(audio)], axis=0))
+
             with torch.no_grad():
+                if self.use_gpu:
+                    audio = audio.cuda()
                 embedding = self.sound_ecoder.forward(audio, aug=False)
                 embedding = F.normalize(embedding, p=2.0, dim=1)
                 score, pre_index, = self.predict(embedding, 1)
-            print(score)
+
             scores.append(score[0].cpu().numpy())
             predict_labels.append(1 if int(label) == pre_index else 0)
         EER, fpr, tpr = calculate_eer(predict_labels, scores)
@@ -101,10 +112,10 @@ class EcapaModel(nn.Module):
         return x
 
     def fbank2(self, x):
-        stft = librosa.stft(x, n_fft=512, hop_length=160, win_length=400, window=scipy.signal.windows.hamming)
-        stft_normalized = librosa.util.normalize(np.abs(stft))
-        mfcc = librosa.feature.mfcc(S=stft_normalized, n_mfcc=80)
-        return mfcc
+        melspectrogram = librosa.feature.melspectrogram(y=x, sr=1600, n_fft=512, win_length=400, hop_length=160,
+                                                        window=scipy.signal.windows.hamming, n_mels=80, fmin=20,
+                                                        fmax=7600)
+        return melspectrogram
 
     def save_models(self, path):
         '''
@@ -115,7 +126,7 @@ class EcapaModel(nn.Module):
 
     def save_jit_trace_models(self):
         # modelInput soundLength*160
-        example_forward_input = torch.rand([1, 3000 * 160])
+        example_forward_input = torch.rand([1, 80, 3000 * 160])
         # set model be eval patten
         self.sound_ecoder.eval()
         traced_model = torch.jit.trace(self.sound_ecoder.forward, example_forward_input)

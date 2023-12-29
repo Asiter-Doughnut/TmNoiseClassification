@@ -8,6 +8,8 @@ import soundfile
 import torch
 import torchaudio
 
+from util import torch_mel, librosa_mel
+
 
 class train_loader(object):
     def __init__(self, train_list, train_path, num_frames, **kwargs):
@@ -42,22 +44,11 @@ class train_loader(object):
         # Process dual-channel audio into single-channel audio.
         if len(audio.shape) >= 3:
             audio = audio[:, :, 0]
-        print("self.fbank", self.fbank(torch.FloatTensor(audio[0])))
-        print("self.fbank2", torch.Tensor(self.fbank2(audio[0])))
-        return torch.Tensor(self.fbank2(audio[0])), int(self.data_label[index])
-
-    def fbank(self, x):
-        torchfbank = torchaudio.transforms.MelSpectrogram(sample_rate=16000, n_fft=512, win_length=400, hop_length=160,
-                                                          f_min=20, f_max=7600, window_fn=torch.hamming_window,
-                                                          n_mels=80)
-        x = torchfbank(x)
-        return x
-
-    def fbank2(self, x):
-        stft = librosa.stft(x, n_fft=512, hop_length=160, win_length=400, window=scipy.signal.windows.hamming)
-        stft_normalized = librosa.util.normalize(np.abs(stft))
-        mfcc = librosa.feature.mfcc(S=stft_normalized, n_mfcc=80)
-        return mfcc
+        # torch mel
+        # audio = torch_mel(torch.FloatTensor(audio[0]))
+        # librosa mel
+        audio = torch.Tensor(librosa_mel(audio[0]))
+        return audio, int(self.data_label[index])
 
     def __len__(self):
         return len(self.data_list)

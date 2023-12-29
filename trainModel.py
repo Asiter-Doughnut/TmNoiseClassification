@@ -21,7 +21,7 @@ trainLoader = torch.utils.data.DataLoader(train_Loader, batch_size=args.batch_si
                                           drop_last=True)
 
 # find the model in the directory
-modelfiles = glob.glob('%s/ecapa_tdnn_*.pt' % args.model_save_path)
+modelfiles = glob.glob('%s/ecapa_tdnn_**.pt' % args.model_save_path)
 modelfiles = sorted(modelfiles, key=lambda x: int(extract_number(x, save_path=args.model_save_path)))
 
 # get record file and add record
@@ -33,19 +33,18 @@ MinDCFs = []
 
 # if model is exit,continue train the previous model
 if len(modelfiles) >= 1:
-    print(modelfiles)
     print("model %s have trained record" % modelfiles[-1])
     filename, _ = os.path.splitext(os.path.basename(modelfiles[-1]))
     print(filename[11:])
     epoch = int(filename[11:]) + 1
     s = EcapaModel(lr=args.learning_rate, lr_decay=args.learning_rate_decay, C=args.channel, m=args.amm_m, s=args.amm_s,
-                   n_class=args.num_class, test_step=args.test_step)
+                   n_class=args.num_class, test_step=args.test_step, use_gpu=args.use_GPU)
     s.load_models(modelfiles[-1])
 # no model,init the model
 else:
     epoch = 1
     s = EcapaModel(lr=args.learning_rate, lr_decay=args.learning_rate_decay, C=args.channel, m=args.amm_m, s=args.amm_s,
-                   n_class=args.num_class, test_step=args.test_step)
+                   n_class=args.num_class, test_step=args.test_step, use_gpu=args.use_GPU)
 
 while 1:
     # trian one epoch

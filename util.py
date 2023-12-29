@@ -1,4 +1,9 @@
 import os.path
+
+import librosa
+import scipy
+import torchaudio
+import torch
 import yaml
 from sklearn.metrics import roc_curve
 import numpy as np
@@ -77,3 +82,18 @@ def calculate_min_dcf(fpr, tpr, p_target=0.05, c_fr=1, c_fa=1, **args):
     c_def = min(c_fr * p_target, c_fa * (1 - p_target))
     min_dcf = min_det / c_def
     return min_dcf
+
+
+def librosa_mel(x):
+    mel = librosa.feature.melspectrogram(y=x, sr=16000, n_fft=512, win_length=400, hop_length=160,
+                                         window=scipy.signal.windows.hamming, n_mels=80, fmin=20,
+                                         fmax=7600)
+    return mel
+
+
+def torch_mel(x):
+    mel = torchaudio.transforms.MelSpectrogram(sample_rate=16000, n_fft=512, win_length=400, hop_length=160,
+                                               f_min=20, f_max=7600, window_fn=torch.hamming_window,
+                                               n_mels=80)
+    x = mel(x)
+    return x
