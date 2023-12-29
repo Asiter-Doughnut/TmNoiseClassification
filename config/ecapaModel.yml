@@ -39,11 +39,13 @@ model_conf:
   amm_s: 30
   # test and save ever [test_step] epochs
   test_step: 1
+  # useGPU
+  use_GPU: True
 
 
 train_conf:
   #max tran epoch
-  max_epoch: 160
+  max_epoch: 180
 
 save_conf:
   save_path: './'
