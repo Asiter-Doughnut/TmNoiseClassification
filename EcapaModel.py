@@ -126,7 +126,7 @@ class EcapaModel(nn.Module):
 
     def save_jit_trace_models(self):
         # modelInput soundLength*160
-        example_forward_input = torch.rand([1, 80, 3000 * 160])
+        example_forward_input = torch.rand([1, 80, 500 * 160])
         # set model be eval patten
         self.sound_ecoder.eval()
         traced_model = torch.jit.trace(self.sound_ecoder.forward, example_forward_input)
