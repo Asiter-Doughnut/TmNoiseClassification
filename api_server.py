@@ -7,7 +7,7 @@ from flask import Flask, request
 import torch.nn.functional as F
 
 from EcapaModel import EcapaModel
-from util import add_arguments
+from util import add_arguments, librosa_mel
 
 app = Flask(__name__)
 
@@ -18,16 +18,17 @@ args = parser.parse_args()
 # initModel
 predictor = EcapaModel(lr=args.learning_rate, lr_decay=args.learning_rate_decay, C=args.channel, m=args.amm_m,
                        s=args.amm_s,
-                       n_class=args.num_class, test_step=args.test_step)
-predictor.load_models('./model/ecapa_tdnn_160.pt')
+                       n_class=args.num_class, test_step=args.test_step, use_gpu=False)
+# predictor.load_models('./model/ecapa_tdnn_160.pt')
+predictor.load_models('./model/ecapa_tdnn_124.pt')
 predictor.eval()
 print("the model init success!")
 
 labels = {}
 
 score_base = 0
-
-with open(args.path + '/' + args.label_list, 'r', encoding='utf-8') as label_file:
+# args.path + '/' + args.label_list
+with open(args.path + '/' + 'labels.txt', 'r', encoding='utf-8') as label_file:
     for index, lines in enumerate(label_file):
         labels[index] = lines.replace("\n", '')
     score_base = 1 / len(labels)
@@ -44,11 +45,9 @@ def index():
         }, ensure_ascii=False)
 
     audio, _ = soundfile.read(file)
-    audio = torch.FloatTensor(numpy.stack([audio], axis=0))
-
-    if len(audio.shape) >= 3:
-        audio = audio[:, :, 0]
-
+    if len(audio.shape) >= 2:
+        audio = audio[:, 0]
+    audio = torch.FloatTensor(numpy.stack([librosa_mel(audio)], axis=0))
     embedding = predictor.sound_ecoder.forward(audio, aug=False)
     embedding = F.normalize(embedding, p=2.0, dim=1)
     score, label = predictor.predict(

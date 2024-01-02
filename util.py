@@ -1,6 +1,7 @@
 import os.path
 
 import librosa
+import numpy
 import scipy
 import torchaudio
 import torch
@@ -88,7 +89,7 @@ def librosa_mel(x):
     mel = librosa.feature.melspectrogram(y=x, sr=16000, n_fft=512, win_length=400, hop_length=160,
                                          window=scipy.signal.windows.hamming, n_mels=80, fmin=20,
                                          fmax=7600)
-    return mel
+    return mel.astype(numpy.float32)
 
 
 def torch_mel(x):

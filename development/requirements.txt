@@ -1,0 +1,6 @@
+# if install failed, please change the pip source to 'https://mirror.baidu.com/pypi/simple'
+
+# utils
+scipy>=1.6.3
+librosa~=0.9.1
+soundfile>=0.12.1
