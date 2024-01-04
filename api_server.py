@@ -20,7 +20,7 @@ predictor = EcapaModel(lr=args.learning_rate, lr_decay=args.learning_rate_decay,
                        s=args.amm_s,
                        n_class=args.num_class, test_step=args.test_step, use_gpu=False)
 # predictor.load_models('./model/ecapa_tdnn_160.pt')
-predictor.load_models('./model/ecapa_tdnn_124.pt')
+predictor.load_models('./model/ecapa_tdnn_124.pt', inCPU=True)
 predictor.eval()
 print("the model init success!")
 
@@ -66,4 +66,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(port=5555, debug=True)
+    app.run(host='0.0.0.0', port=19666, debug=True)

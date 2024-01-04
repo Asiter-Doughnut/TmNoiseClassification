@@ -126,7 +126,7 @@ class EcapaModel(nn.Module):
 
     def save_jit_trace_models(self):
         # modelInput soundLength*160
-        example_forward_input = torch.rand([1, 80, 500 * 160])
+        example_forward_input = torch.rand([1, 80, 500])
         # set model be eval patten
         self.sound_ecoder.eval()
         traced_model = torch.jit.trace(self.sound_ecoder.forward, example_forward_input)
@@ -137,13 +137,16 @@ class EcapaModel(nn.Module):
         # save loss weight
         np.savetxt('Class_ptModel_loss.txt', numpy_array)
 
-    def load_models(self, path):
+    def load_models(self, path, inCPU=False):
         '''
         load the models
         :return:null
         '''
         self_state = self.state_dict()
-        loader_state = torch.load(path)
+        if inCPU:
+            loader_state = torch.load(path, map_location='cpu')
+        else:
+            loader_state = torch.load(path)
         for name, param in loader_state.items():
             if name not in self_state:
                 print("%s is not in the model." % name)
