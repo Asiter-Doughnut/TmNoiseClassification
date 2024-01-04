@@ -60,3 +60,8 @@ model conversion, and illegal instructions will suddenly occur when the weight l
 no problem with the replacement of the VMware Workstation Pro. The input tensor is initially [1,80,3000 * 160]. Model
 conversion failed. Conversion errors may occur because the data is too large. Now it becomes 500 \ * 160. It is the
 audio of 5S. At present, we are waiting for the deployment of connecting boards.
+
+### RKNN deployment boards
+
+The impact of rknn conversion on the result of arithmetic operations is too significant, resulting in a large deviation
+in the calculated results. Currently, I am not considering using NPU but will instead use CPU for inference.
