@@ -3,7 +3,7 @@ import json
 import numpy
 import soundfile
 import torch
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import torch.nn.functional as F
 
 from EcapaModel import EcapaModel
@@ -19,14 +19,16 @@ args = parser.parse_args()
 predictor = EcapaModel(lr=args.learning_rate, lr_decay=args.learning_rate_decay, C=args.channel, m=args.amm_m,
                        s=args.amm_s,
                        n_class=args.num_class, test_step=args.test_step, use_gpu=False)
-# predictor.load_models('./model/ecapa_tdnn_160.pt')
-predictor.load_models('./model/ecapa_tdnn_124.pt', inCPU=True)
+
+predictor.load_cpu_location_models('./best_model/ecapa_tdnn_177.pt')
+
 predictor.eval()
 print("the model init success!")
 
 labels = {}
 
 score_base = 0
+
 # args.path + '/' + args.label_list
 with open(args.path + '/' + 'labels.txt', 'r', encoding='utf-8') as label_file:
     for index, lines in enumerate(label_file):
@@ -34,10 +36,10 @@ with open(args.path + '/' + 'labels.txt', 'r', encoding='utf-8') as label_file:
     score_base = 1 / len(labels)
 
 
-@app.route('/aiapi/pread/file', methods=['POST'])
+@app.route('/api/sound/classification/top', methods=['POST'])
 def index():
     file = request.files.get('file')
-    label_format = int(request.form.get("labelNumber", 1))
+    label_format = int(request.form.get("labelNumber", 3))
 
     if file is None:
         return json.dumps({
@@ -56,14 +58,17 @@ def index():
     result_array = []
 
     for score_value, label_value in zip(score, label):
+        wav_score = (score_value.item() - score_base) / score_base
+        wav_score = 0.8 if (wav_score > 0.8) else wav_score
         result = {
             "label": labels[int(label_value.item())],
-            "score": str(round(((score_value.item() - score_base) / score_base) * 100, 2)) + "%"
+            "score": str(round(wav_score * 100, 2)) + "%"
         }
         result_array.append(result)
     # return json.dumps(result_array, )
-    return json.dumps(result_array)
+    # return json.dumps(result_array, ensure_ascii=False)
+    return jsonify(result_array)
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=19666, debug=True)
+    app.run(host='0.0.0.0', port=6712, debug=True)
