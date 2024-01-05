@@ -124,29 +124,13 @@ class EcapaModel(nn.Module):
         '''
         torch.save(self.state_dict(), path)
 
-    def save_jit_trace_models(self):
-        # modelInput soundLength*160
-        example_forward_input = torch.rand([1, 80, 500])
-        # set model be eval patten
-        self.sound_ecoder.eval()
-        traced_model = torch.jit.trace(self.sound_ecoder.forward, example_forward_input)
-        # save model
-        torch.jit.save(traced_model, "Class_ptModel.pt")
-        tensor = self.sound_loss.weight.T
-        numpy_array = tensor.cpu().detach().numpy()
-        # save loss weight
-        np.savetxt('Class_ptModel_loss.txt', numpy_array)
-
-    def load_models(self, path, inCPU=False):
+    def load_models(self, path):
         '''
         load the models
         :return:null
         '''
         self_state = self.state_dict()
-        if inCPU:
-            loader_state = torch.load(path, map_location='cpu')
-        else:
-            loader_state = torch.load(path)
+        loader_state = torch.load(path)
         for name, param in loader_state.items():
             if name not in self_state:
                 print("%s is not in the model." % name)
@@ -155,6 +139,12 @@ class EcapaModel(nn.Module):
                 print("Wrong parameter length:%s ,model:%s,loadedModel:%s" % (
                     name, self_state[name].size(), loader_state[name].size()))
                 continue
+            self_state[name].copy_(param)
+
+    def load_cpu_location_models(self, path):
+        self_state = self.state_dict()
+        loader_state = torch.load(path, map_location='cpu')
+        for name, param in loader_state.items():
             self_state[name].copy_(param)
 
     def predict(self, x, show_num):

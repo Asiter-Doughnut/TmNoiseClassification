@@ -21,5 +21,4 @@ if __name__ == '__main__':
     # train_Loader.__getitem__(2)
     s.load_models("./model/ecapa_tdnn_124.pt")
     # score = s.eval_network(test_list=args.test_list, test_path=args.path)
-
-    s.save_jit_trace_models()
+    # s.save_jit_trace_models()
