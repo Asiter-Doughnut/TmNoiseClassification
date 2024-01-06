@@ -70,5 +70,36 @@ def index():
     return jsonify(result_array)
 
 
+@app.route('/AudioRecognize', methods=['POST'])
+def audioRecognize():
+    try:
+        file = request.files.get('file')
+        label_format = int(request.form.get("labelNumber", 3))
+        audio, _ = soundfile.read(file)
+        if len(audio.shape) >= 2:
+            audio = audio[:, 0]
+        audio = torch.FloatTensor(numpy.stack([librosa_mel(audio)], axis=0))
+        embedding = predictor.sound_ecoder.forward(audio, aug=False)
+        embedding = F.normalize(embedding, p=2.0, dim=1)
+        score, label = predictor.predict(
+            embedding, label_format)
+        result_array = []
+        for score_value, label_value in zip(score, label):
+            result = {
+                "name": labels[int(label_value.item())],
+                "score": round(float(score_value*100), 3)
+            }
+            result_array.append(result)
+        return jsonify({
+            "code": 1000,
+            "message": "识别成功",
+            "data": result_array,
+            "spectrogram ": None
+        })
+    except Exception as e:
+        return jsonify({"code": 1001, "message": "识别失败", "data": [],
+                        "spectrogram ": None}), 200
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=6712, debug=True)

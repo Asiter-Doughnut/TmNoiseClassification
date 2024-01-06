@@ -1,0 +1,10 @@
+# if install failed, please change the pip source to 'https://mirror.baidu.com/pypi/simple'
+# The pytorch environment requires you to install the latest version yourself
+numpy>=1.19.2
+librosa~=0.10.1
+scipy~=1.11.4
+pyyaml>=5.4.1
+scikit-learn~=1.3.0
+soundfile>=0.12.1
+flask~=2.2.5
+tqdm>=4.64.1
