@@ -104,19 +104,6 @@ class EcapaModel(nn.Module):
         min_DCF = calculate_min_dcf(fpr, tpr)
         return EER, min_DCF
 
-    def fbank(self, x):
-        torchfbank = torchaudio.transforms.MelSpectrogram(sample_rate=16000, n_fft=512, win_length=400, hop_length=160,
-                                                          f_min=20, f_max=7600, window_fn=torch.hamming_window,
-                                                          n_mels=80)
-        x = torchfbank(x)
-        return x
-
-    def fbank2(self, x):
-        melspectrogram = librosa.feature.melspectrogram(y=x, sr=1600, n_fft=512, win_length=400, hop_length=160,
-                                                        window=scipy.signal.windows.hamming, n_mels=80, fmin=20,
-                                                        fmax=7600)
-        return melspectrogram
-
     def save_models(self, path):
         '''
         save the models in local
